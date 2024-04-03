@@ -2,9 +2,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MASK 0x07fffffe
+
 bool ispangram(char *s) {
-  printf("%s", s);
-  return true;
+  uint32_t bs = 0;
+  char c;
+  while ((c = *s++) != '\0') {
+    if (c < '@')
+      continue; // ignore first 64 chare in ascii table
+    bs |= 1 << (c & 0x1f);
+  };
+  return (bs & MASK) == MASK;
 }
 
 int main() {
@@ -13,7 +21,7 @@ int main() {
   char *line = NULL;
   while ((read = getline(&line, &len, stdin)) != -1) {
     if (ispangram(line))
-      true;
+      printf("%s", line);
   }
 
   if (ferror(stdin))
