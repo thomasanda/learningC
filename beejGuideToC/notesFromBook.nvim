@@ -1,0 +1,321 @@
+COMPILE C PROGRAMS FOR C2x WITH ALL WARNINGS:
+```C
+gcc -Wall -Wextra -std=c2x -pedantic foo.c
+```
+
+## 3.1 Variable and statements
+
+### Boolean
+
+C doesn't have boolean type. But can be declared as ints. 0 false everything else is true.
+
+```C
+int x = 1;
+if (x) {
+    printf("x is true!\n")
+}
+```
+
+Or use #include <stdbool.h> - same as using int but a facade to make things look nice.
+
+```
+#include <stdio.h>
+#include <stdbool.h>
+
+int main(void) {
+    bool x = true;
+    
+    if (x) {
+        printf("x is true!\n")
+    }
+}
+```
+
+## 3.2 Operators and expressions
+
+### 3.2.1 Arithmetic
+
+All the usual operators. However no exponentiation. Have to use pow() function from math.h
+
+### 3.2.2 Ternary Operator
+
+```C
+// If x > 10, add 17 to y. Otherwise add 37 to y.
+
+y += x > 10 ? 17 : 37;
+```
+
+!! The ternary operator isn't flow control like the if statement is. It's just an expression that evaluates to a value.
+
+### 3.2.3 Pre-and-post Increment-and-Decrement
+
+Can embed them in expressions:
+
+```C
+i = 10
+j = 5 + i++ 
+printf("%d, %d\n", i , j); // Prints 11, 16
+```
+
+### 3.2.4 The comma operator
+
+'Uncommonly-used' way to spearate expressions that will run left to right:
+`x = 10, y = 20;`
+
+One common place to use it is in for loops to do multiple things in each section of the statement:
+
+```C
+for (i = 0, j = 10; i < 100; i++, j++)
+    printf("%d, %d\n", i, j);
+```
+
+Conditional operators and boolean operators nothing special.
+
+### 3.2.7 The sizeof operator
+
+This operator tell you the size (in bytes) that a particular variable or data type uses in memory. It tells you the size (in bytes) that the type of a particular expression uses in memory!
+
+C has a special type to represent the return value from `sizeof`. It's `size_t`, pronounced "size tee". (t is short for type). 
+
+```C
+int a = 999;
+
+// %zu is the format specifier for the type size_t
+
+printf("%zu\n", sizeof a); // prints 4 on my system
+printf("%zu\n", sizeof(2 + 7)); // prints 4
+printf("%zu\n", sizeof 3.14); // prints 8
+```
+
+It's the size in bytes of the type of the expression, noth the size of the expression itself.
+
+It's important to note that sizeof is a compile-time operation. The result of the expression is determined entirely at compile-time, not at runtime.
+
+### 3.3.2 The while statement
+
+A not-uncommon use of while is for infinite loops where you repeat while true:
+```C
+while(1) {
+    printf("1 is always true, so this repeats forever. \n");
+}
+```
+
+### 3.3.3 The do-while statement
+If the loop condition is false on the first pass, do-while will execute once, but while won't execute at all. The test to see whether or not to execute happens at the end of do-while - beginning of while.
+int i;
+i = 10;
+```C
+do {
+    printf("do-while: i is %d\n", i);
+    i++
+} while (i < 10); //will execute once
+```
+
+### 3.3.4 for-loop
+
+`for (initialize things; loop if this is true; do this after each loop)`
+
+an empty for will run forever:
+```C
+for(;;) {
+    printf("this will run forever\n");
+}
+```
+
+## 4 Functions
+
+Functions can accept a variety of arguments and return a value. The arguments and return value types are predeclared. 
+
+A parameter is a special type of local variable into which the arguments are copied.
+
+The parameter is a copy of the argument, not the argument itself.
+
+```C
+#include <stdio.h>
+
+// This function thakes no arguments and returns no value:
+
+void hello(void) {
+    printf("Hello, world!\n");
+}
+
+int main(void) {
+    hello(); // Prints "Hello, world!"
+}
+```
+
+But no fancy-schmancy name will distract you from the fact that EVERYTHING you pass to a function WITH- OUT EXCEPTION is copied into its corresponding parameter, and the function operates on that local copy, NO MATTER WHAT. Remember that, even when we’re talking about this so-called passing by reference.
+
+### 4.2 Function Prototypes
+You can 'notify' the complier in advance that you'll be using a function of a certain type that has a ceratin parameter list.
+
+The function can with use of prototypes be defined anywhere (even a different file).
+
+```C
+#include <stdio.h>
+
+int foo(void); // This is the prototype!
+
+int main(void)
+{
+    int i;
+    
+    // We can call foo() here before it's definition since protoype declaration
+    
+    i = foo();
+    printf("%d\n", i) // 3490
+}
+
+int foo(void)
+{
+    return 3490;
+}
+```
+
+### 4.3 Empty Parameter Lists
+
+Always use `void` to indicate that a function takes no parameters. There's never a reason to skip this in modern code!
+
+With a prototype **definitely** use void when you have an empty parameter list.
+
+# Chapter 5 Pointers
+
+### 5.1 Memory and variable
+
+To make memory easy to cope with, each byte of memory is identified by an integer. They increase sequentially as you move up through memory. Like a big array where each element hold a byte. The number that represents each box is called its address.
+
+An `int` is often four bytes, as is a `float`, but depends on the systme. You can use `sizeof` operator to determine how many bytes of memory a certain type uses.
+
+```C
+// %zu is the format specifier for type size_t
+
+printf("an int uses %zu bytes of memory\n", sizeof(int));
+```
+
+A pointer is a variable that holds an adress!!
+
+Example from the book:
+
+"Imagine you have a bunch of Post-it® notes all numbered in sequence with their address. (The first one is at
+index numbered 0, the next at index 1, and so on.)
+In addition to the number representing their positions, you can also write another number of your choice on
+each. It could be the number of dogs you have. Or the number of moons around Mars... ...Or, it could be the index of another Post-it note!
+If you have written the number of dogs you have, that’s just a regular variable. But if you wrote the index of another Post-it in there, that’s a pointer. It points to the other note!"
+
+TO get the a pointer to f.ex an int, we want some way to get the address of the int. The pointer holds the address of the data. We use the address-of operator `&`!
+
+We can print a pointer with %p. It prints a hex which is the index into memory that the first byt of data is stored in.
+
+
+```C
+#include <stdio.h>
+
+int main(void) {
+    int i = 10;
+    
+    printf("The value of i is %d\n", i);
+    printf("And its address is %p\n", (void *)&i);
+    
+    // %p expects the argument to ve a pointer to void
+    // so we cast it to make the compiler happy
+}
+```
+
+The address is the index into memory where the variable i's data is stored. It's the address of i. It's the location of i. It points to i.
+
+We don't really care what the address's exact number is, generally. We just care that it's a pointer to i.
+
+### 5.2 Pointer Types
+
+```C
+int main(void) {
+    int i; // i's type is "int"
+    int *p; // p's type is "pointer to an int", or "int-pointer"
+}
+```
+
+A variable that is a pointer type, it can point to other ints. Meaning it can hold the address of other ints. 
+
+Doing an assignment the type on right hand sid has to be the same type as the pointer var. When you take address-of a var, the type is a pointer to that variable type.
+
+```C
+int i;
+int *p;
+
+p = &i;
+```
+
+### 5.3 Dereferencing
+
+When you have a pointer to a variable, you can use the original variable through the pointer by dereferencing the pointer.
+
+The derefetence operator is called **indirection operator**!
+
+Because you are accessing values indirectly via the pointer. It is the `*`-asterisk.
+
+Example:
+```C
+#include <stdio.h>
+
+int main(void) {
+    int i;
+    int *p; // This is type "int*" int-pointer
+    
+    p = &i; // p now points to i, p holds address of i
+    
+    i = 10; // i is now 10
+    *p = 20; // the thing p points to (namely i!) is now 20!!
+    
+    printf("i is %d\n", i); // prints "20"
+    printf("i is %d\n", *p); // "20"! dereference-p is the same as i!
+}
+```
+
+The indirection operator tells the computer to use the object the pointer points to instead of using the pointer itself. *p is a sort of alias for i.
+
+## 5.4 Passing pointers as arguments
+
+The real power of pointers comes into play when you start passing them to functions.
+
+if you pass a pointer to a function the function will get a copy of the pointer. If you have set up the pointer in advance to point at a variable, the function can dereference its copy of the pointer to get vack to the original variable!
+
+let's revisit the old increment() finction:
+
+
+```C
+#include <stdio.h>
+
+void increment(int *p) // note that it accepts a pointer to an int
+{
+    *p = *p + 1; // add on to the thing p points to
+}
+
+int main(void) {
+    int i = 10;
+    int *j = &i; // not the address-of; turns it into a pointer to i
+    
+    printf("i is %d\n", i);
+    printf("i is also %d\n", j);
+    
+    increment(j); // j is an int*--to i
+    printf("i is %d\n", i); // prints "11"!
+}
+```
+
+The above example is often more concisely written in the call just by using adress-of right in the arguemnt list:
+
+```C
+printf("i is %d\n", i); // prints 10
+increment(&i);
+printf("i is %d\n", i); // prints 11
+```
+
+As a general rule, if you want the function to modify the thing that you're passing in such that you see the result, you'll have to pass a pointer to that thing.
+
+## 5.5 The NULL Pointer
+
+Any pointer variable of any pointer type can be set to NULL - which indicates that the pointer doesn't point to anything.
+
+The null pointer is a good sentinel value. The pointer points to garbage unless you explicitly assign it to point to an address or NULL.
+
+## 5.6 A Note on Declaring Pointers
